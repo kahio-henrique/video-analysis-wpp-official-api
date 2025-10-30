@@ -14,6 +14,7 @@ from dash.exceptions import PreventUpdate
 
 from video_validator import VideoValidator, format_validation_report
 from video_converter import VideoConverter
+from translations import TRANSLATIONS, get_text
 
 
 # Initialize Dash app
@@ -29,18 +30,42 @@ UPLOAD_FOLDER.mkdir(exist_ok=True)
 
 # App layout with minimalist design
 app.layout = dbc.Container([
-    # Header
+    # Language store
+    dcc.Store(id='language-store', data='en'),
+
+    # Header with language selector
     dbc.Row([
         dbc.Col([
             html.Div([
-                html.H1("Video Validator", className="text-center mb-2",
+                # Language selector (top right)
+                html.Div([
+                    dcc.Dropdown(
+                        id='language-selector',
+                        options=[
+                            {'label': '🇺🇸 English', 'value': 'en'},
+                            {'label': '🇧🇷 Português', 'value': 'pt'},
+                            {'label': '🇪🇸 Español', 'value': 'es'}
+                        ],
+                        value='en',
+                        clearable=False,
+                        searchable=False,
+                        style={
+                            'width': '160px',
+                            'fontSize': '0.85rem',
+                            'border': 'none'
+                        }
+                    )
+                ], style={'position': 'absolute', 'top': '1rem', 'right': '1rem'}),
+
+                # Title
+                html.H1(id='page-title', className="text-center mb-2",
                        style={'fontWeight': '300', 'fontSize': '2.5rem', 'color': '#1a1a1a'}),
                 html.P(
-                    "WhatsApp API Compliance Tool",
+                    id='page-subtitle',
                     className="text-center mb-5",
                     style={'color': '#666', 'fontSize': '0.95rem', 'letterSpacing': '0.5px'}
                 ),
-            ], style={'marginTop': '3rem'})
+            ], style={'marginTop': '3rem', 'position': 'relative'})
         ])
     ]),
 
@@ -55,8 +80,8 @@ app.layout = dbc.Container([
                         id='upload-video',
                         children=html.Div([
                             html.Div("📁", style={'fontSize': '3rem', 'marginBottom': '1rem'}),
-                            html.P('Drop video file here', style={'marginBottom': '0.5rem', 'color': '#333', 'fontSize': '1rem'}),
-                            html.Small('or click to browse', style={'color': '#999', 'fontSize': '0.85rem'})
+                            html.P(id='upload-title', style={'marginBottom': '0.5rem', 'color': '#333', 'fontSize': '1rem'}),
+                            html.Small(id='upload-subtitle', style={'color': '#999', 'fontSize': '0.85rem'})
                         ]),
                         style={
                             'width': '100%',
@@ -600,6 +625,24 @@ def create_validation_table(results):
             ))
 
     return html.Div(content)
+
+
+# Translation callback - updates UI text when language changes
+@app.callback(
+    [Output('page-title', 'children'),
+     Output('page-subtitle', 'children'),
+     Output('upload-title', 'children'),
+     Output('upload-subtitle', 'children')],
+    Input('language-selector', 'value')
+)
+def update_translations(lang):
+    """Update UI text based on selected language"""
+    return (
+        get_text(lang, 'title'),
+        get_text(lang, 'subtitle'),
+        get_text(lang, 'upload_title'),
+        get_text(lang, 'upload_subtitle')
+    )
 
 
 if __name__ == '__main__':
