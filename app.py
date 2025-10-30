@@ -115,22 +115,27 @@ app.layout = dbc.Container([
                             }
                         ),
 
-                        dbc.Button(
-                            "Quick Fix",
-                            id='quickfix-btn',
-                            className='w-100 mb-2',
-                            disabled=True,
-                            style={
-                                'backgroundColor': '#fff',
-                                'color': '#333',
-                                'border': '1px solid #ddd',
-                                'borderRadius': '6px',
-                                'padding': '0.75rem',
-                                'fontSize': '0.9rem',
-                                'fontWeight': '400',
-                                'letterSpacing': '0.3px'
-                            }
-                        ),
+                        html.Div([
+                            dbc.Button(
+                                [
+                                    html.Div("Quick Fix", style={'marginBottom': '0.15rem'}),
+                                    html.Small("(moov atom only)", style={'fontSize': '0.75rem', 'opacity': '0.7'})
+                                ],
+                                id='quickfix-btn',
+                                className='w-100 mb-2',
+                                disabled=True,
+                                style={
+                                    'backgroundColor': '#fff',
+                                    'color': '#333',
+                                    'border': '1px solid #ddd',
+                                    'borderRadius': '6px',
+                                    'padding': '0.75rem',
+                                    'fontSize': '0.9rem',
+                                    'fontWeight': '400',
+                                    'letterSpacing': '0.3px'
+                                }
+                            ),
+                        ]),
                     ]),
 
                     # Info about output location
@@ -149,24 +154,49 @@ app.layout = dbc.Container([
             # Requirements card
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("Requirements", style={'fontSize': '0.9rem', 'fontWeight': '400', 'color': '#666', 'marginBottom': '1rem'}),
+                    html.H6("WhatsApp API Requirements", style={'fontSize': '0.95rem', 'fontWeight': '400', 'color': '#333', 'marginBottom': '1rem'}),
                     html.Div([
+                        # Video Codec
                         html.Div([
-                            html.Span("H.264", style={'color': '#333', 'fontSize': '0.85rem', 'display': 'inline-block', 'marginBottom': '0.5rem'}),
-                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
-                            html.Span("AAC-LC", style={'color': '#333', 'fontSize': '0.85rem'}),
-                        ], style={'marginBottom': '0.5rem'}),
-                        html.Div([
-                            html.Span("MP4/3GP", style={'color': '#333', 'fontSize': '0.85rem'}),
-                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
-                            html.Span("≤ 16 MB", style={'color': '#333', 'fontSize': '0.85rem'}),
-                        ], style={'marginBottom': '0.5rem'}),
-                        html.Div([
-                            html.Span("yuv420p", style={'color': '#333', 'fontSize': '0.85rem'}),
-                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
-                            html.Span("Level 3.0", style={'color': '#333', 'fontSize': '0.85rem'}),
+                            html.Div("Video Codec", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("H.264 (Baseline or Main profile)", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
                         ]),
-                    ], style={'lineHeight': '1.8'})
+                        # Codec Level
+                        html.Div([
+                            html.Div("Codec Level", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("3.0 (max 3.1)", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # Audio Codec
+                        html.Div([
+                            html.Div("Audio Codec", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("AAC-LC", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # Container
+                        html.Div([
+                            html.Div("Container", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("MP4 or 3GP", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # File Size
+                        html.Div([
+                            html.Div("Max Size", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("16 MB", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # Audio Streams
+                        html.Div([
+                            html.Div("Audio Streams", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("Single or none", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # Pixel Format
+                        html.Div([
+                            html.Div("Pixel Format", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("yuv420p", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+                        ]),
+                        # Progressive
+                        html.Div([
+                            html.Div("Progressive", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+                            html.Div("moov atom at beginning", style={'fontSize': '0.85rem', 'color': '#333'}),
+                        ]),
+                    ])
                 ])
             ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'})
         ], md=4),
