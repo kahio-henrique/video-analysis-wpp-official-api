@@ -167,22 +167,7 @@ app.layout = dbc.Container([
                     ]),
 
                     # Info about file handling
-                    html.Div([
-                        dbc.Alert([
-                            html.Div([
-                                html.I(className="fas fa-info-circle me-2"),
-                                html.Strong("How it works:")
-                            ], style={'marginBottom': '0.5rem'}),
-                            html.Small([
-                                "1. Upload video (temporary storage)", html.Br(),
-                                "2. Process & validate", html.Br(),
-                                "3. Download to your location", html.Br(),
-                                html.Br(),
-                                html.Strong("For direct file paths: "),
-                                html.Code("python cli.py input.mp4 --convert", style={'fontSize': '0.7rem'})
-                            ], style={'fontSize': '0.75rem', 'lineHeight': '1.6'})
-                        ], color='light', className='mb-0 mt-3', style={'border': '1px solid #e0e0e0'})
-                    ]),
+                    html.Div(id='file-handling-info', className='mt-3'),
 
                     # Hidden div to store file path
                     html.Div(id='stored-filepath', style={'display': 'none'}),
@@ -658,7 +643,7 @@ def download_converted_video(n_clicks, button_ids):
      Output('convert-btn', 'children'),
      Output('quickfix-text', 'children'),
      Output('quickfix-subtitle-text', 'children'),
-     Output('output-label', 'children'),
+     Output('file-handling-info', 'children'),
      Output('requirements-title', 'children'),
      Output('requirements-content', 'children'),
      Output('footer-text', 'children'),
@@ -667,6 +652,22 @@ def download_converted_video(n_clicks, button_ids):
 )
 def update_translations(lang):
     """Update UI text based on selected language"""
+
+    # Build file handling info
+    file_info = dbc.Alert([
+        html.Div([
+            html.I(className="fas fa-info-circle me-2"),
+            html.Strong(get_text(lang, 'how_it_works'))
+        ], style={'marginBottom': '0.5rem'}),
+        html.Small([
+            get_text(lang, 'step_1'), html.Br(),
+            get_text(lang, 'step_2'), html.Br(),
+            get_text(lang, 'step_3'), html.Br(),
+            html.Br(),
+            html.Strong(get_text(lang, 'cli_note') + " "),
+            html.Code("python cli.py input.mp4 --convert", style={'fontSize': '0.7rem'})
+        ], style={'fontSize': '0.75rem', 'lineHeight': '1.6'})
+    ], color='light', className='mb-0', style={'border': '1px solid #e0e0e0'})
 
     # Build requirements content dynamically
     requirements = html.Div([
@@ -721,7 +722,7 @@ def update_translations(lang):
         get_text(lang, 'convert_btn'),
         get_text(lang, 'quickfix_btn'),
         get_text(lang, 'quickfix_subtitle'),
-        get_text(lang, 'output_location'),
+        file_info,
         get_text(lang, 'requirements_title'),
         requirements,
         get_text(lang, 'footer_text'),
