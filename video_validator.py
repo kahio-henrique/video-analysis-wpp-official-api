@@ -6,6 +6,7 @@ import os
 import struct
 import json
 import subprocess
+import shutil
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
@@ -62,6 +63,11 @@ class VideoValidator:
         video_info = self._get_video_info()
         results['video_info'] = video_info
 
+        if video_info.get('error') == 'ffprobe not found':
+            results['is_valid'] = False
+            results['errors'].append('FFmpeg/FFprobe is not installed. Please install FFmpeg from https://ffmpeg.org/download.html')
+            return results
+
         if not video_info.get('streams'):
             results['is_valid'] = False
             results['errors'].append('Unable to read video file or invalid format')
@@ -101,6 +107,12 @@ class VideoValidator:
         Returns:
             Dictionary with video information
         """
+        # Check if ffprobe is available
+        if not shutil.which('ffprobe'):
+            print("FFprobe is not installed or not in system PATH")
+            print("Please install FFmpeg from https://ffmpeg.org/download.html")
+            return {'streams': [], 'format': {}, 'error': 'ffprobe not found'}
+
         try:
             cmd = [
                 'ffprobe',

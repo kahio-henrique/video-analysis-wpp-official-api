@@ -27,19 +27,20 @@ app = dash.Dash(
 UPLOAD_FOLDER = Path('uploads')
 UPLOAD_FOLDER.mkdir(exist_ok=True)
 
-# App layout
+# App layout with minimalist design
 app.layout = dbc.Container([
     # Header
     dbc.Row([
         dbc.Col([
-            html.H1([
-                html.I(className="fas fa-video me-3"),
-                "Video Validator & Converter"
-            ], className="text-center my-4 text-primary"),
-            html.P(
-                "Validate and convert videos for WhatsApp API compliance",
-                className="text-center text-muted mb-4"
-            ),
+            html.Div([
+                html.H1("Video Validator", className="text-center mb-2",
+                       style={'fontWeight': '300', 'fontSize': '2.5rem', 'color': '#1a1a1a'}),
+                html.P(
+                    "WhatsApp API Compliance Tool",
+                    className="text-center mb-5",
+                    style={'color': '#666', 'fontSize': '0.95rem', 'letterSpacing': '0.5px'}
+                ),
+            ], style={'marginTop': '3rem'})
         ])
     ]),
 
@@ -48,30 +49,30 @@ app.layout = dbc.Container([
         # Left column - Upload and controls
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader([
-                    html.I(className="fas fa-upload me-2"),
-                    "Upload Video"
-                ], className="fw-bold"),
                 dbc.CardBody([
                     # File upload
                     dcc.Upload(
                         id='upload-video',
                         children=html.Div([
-                            html.I(className="fas fa-cloud-upload-alt fa-3x mb-3"),
-                            html.P('Drag and Drop or Click to Select Video File'),
-                            html.Small('Supported formats: MP4, 3GP, MOV, AVI, MKV', className='text-muted')
+                            html.Div("📁", style={'fontSize': '3rem', 'marginBottom': '1rem'}),
+                            html.P('Drop video file here', style={'marginBottom': '0.5rem', 'color': '#333', 'fontSize': '1rem'}),
+                            html.Small('or click to browse', style={'color': '#999', 'fontSize': '0.85rem'})
                         ]),
                         style={
                             'width': '100%',
-                            'height': '200px',
-                            'lineHeight': '60px',
+                            'height': '180px',
                             'borderWidth': '2px',
                             'borderStyle': 'dashed',
-                            'borderRadius': '10px',
+                            'borderRadius': '8px',
+                            'borderColor': '#ddd',
                             'textAlign': 'center',
                             'padding': '40px',
                             'cursor': 'pointer',
-                            'backgroundColor': '#f8f9fa'
+                            'backgroundColor': '#fafafa',
+                            'display': 'flex',
+                            'alignItems': 'center',
+                            'justifyContent': 'center',
+                            'transition': 'all 0.2s ease'
                         },
                         multiple=False
                     ),
@@ -82,70 +83,130 @@ app.layout = dbc.Container([
 
                     # Action buttons
                     html.Div([
-                        dbc.Button([
-                            html.I(className="fas fa-check-circle me-2"),
-                            "Validate Video"
-                        ], id='validate-btn', color='primary', className='w-100 mb-2', disabled=True),
+                        dbc.Button(
+                            "Validate",
+                            id='validate-btn',
+                            className='w-100 mb-2',
+                            disabled=True,
+                            style={
+                                'backgroundColor': '#1a1a1a',
+                                'border': 'none',
+                                'borderRadius': '6px',
+                                'padding': '0.75rem',
+                                'fontSize': '0.9rem',
+                                'fontWeight': '400',
+                                'letterSpacing': '0.3px'
+                            }
+                        ),
 
-                        dbc.Button([
-                            html.I(className="fas fa-sync-alt me-2"),
-                            "Fix & Convert Video"
-                        ], id='convert-btn', color='success', className='w-100 mb-2', disabled=True),
+                        dbc.Button(
+                            "Convert & Fix",
+                            id='convert-btn',
+                            className='w-100 mb-2',
+                            disabled=True,
+                            style={
+                                'backgroundColor': '#2a2a2a',
+                                'border': 'none',
+                                'borderRadius': '6px',
+                                'padding': '0.75rem',
+                                'fontSize': '0.9rem',
+                                'fontWeight': '400',
+                                'letterSpacing': '0.3px'
+                            }
+                        ),
 
-                        dbc.Button([
-                            html.I(className="fas fa-magic me-2"),
-                            "Quick Fix (moov atom only)"
-                        ], id='quickfix-btn', color='warning', className='w-100 mb-2', disabled=True),
+                        dbc.Button(
+                            "Quick Fix",
+                            id='quickfix-btn',
+                            className='w-100 mb-2',
+                            disabled=True,
+                            style={
+                                'backgroundColor': '#fff',
+                                'color': '#333',
+                                'border': '1px solid #ddd',
+                                'borderRadius': '6px',
+                                'padding': '0.75rem',
+                                'fontSize': '0.9rem',
+                                'fontWeight': '400',
+                                'letterSpacing': '0.3px'
+                            }
+                        ),
+                    ]),
+
+                    # Info about output location
+                    html.Div([
+                        html.P([
+                            html.Small("Output: ", style={'color': '#999', 'fontSize': '0.8rem'}),
+                            html.Small("uploads/", style={'color': '#666', 'fontSize': '0.8rem', 'fontFamily': 'monospace'})
+                        ], className='mb-0 mt-3', style={'textAlign': 'center'})
                     ]),
 
                     # Hidden div to store file path
                     html.Div(id='stored-filepath', style={'display': 'none'}),
                 ]),
-            ], className='shadow-sm mb-4'),
+            ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'}, className='mb-4'),
 
             # Requirements card
             dbc.Card([
-                dbc.CardHeader([
-                    html.I(className="fas fa-list-check me-2"),
-                    "WhatsApp API Requirements"
-                ], className="fw-bold"),
                 dbc.CardBody([
-                    html.Ul([
-                        html.Li([html.Strong("Video Codec: "), "H.264 (Baseline or Main profile)"]),
-                        html.Li([html.Strong("Codec Level: "), "3.0 (max 3.1)"]),
-                        html.Li([html.Strong("Audio Codec: "), "AAC-LC"]),
-                        html.Li([html.Strong("Container: "), "MP4 or 3GP"]),
-                        html.Li([html.Strong("Max Size: "), "16 MB"]),
-                        html.Li([html.Strong("Audio Streams: "), "Single or none"]),
-                        html.Li([html.Strong("Pixel Format: "), "yuv420p"]),
-                        html.Li([html.Strong("Progressive: "), "moov atom at beginning"]),
-                    ], className='mb-0 small')
+                    html.H6("Requirements", style={'fontSize': '0.9rem', 'fontWeight': '400', 'color': '#666', 'marginBottom': '1rem'}),
+                    html.Div([
+                        html.Div([
+                            html.Span("H.264", style={'color': '#333', 'fontSize': '0.85rem', 'display': 'inline-block', 'marginBottom': '0.5rem'}),
+                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
+                            html.Span("AAC-LC", style={'color': '#333', 'fontSize': '0.85rem'}),
+                        ], style={'marginBottom': '0.5rem'}),
+                        html.Div([
+                            html.Span("MP4/3GP", style={'color': '#333', 'fontSize': '0.85rem'}),
+                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
+                            html.Span("≤ 16 MB", style={'color': '#333', 'fontSize': '0.85rem'}),
+                        ], style={'marginBottom': '0.5rem'}),
+                        html.Div([
+                            html.Span("yuv420p", style={'color': '#333', 'fontSize': '0.85rem'}),
+                            html.Span(" • ", style={'color': '#ccc', 'margin': '0 0.5rem'}),
+                            html.Span("Level 3.0", style={'color': '#333', 'fontSize': '0.85rem'}),
+                        ]),
+                    ], style={'lineHeight': '1.8'})
                 ])
-            ], className='shadow-sm')
+            ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'})
         ], md=4),
 
         # Right column - Results
         dbc.Col([
             # Validation results
-            html.Div(id='validation-results'),
+            dcc.Loading(
+                id="loading-validation",
+                type="default",
+                children=html.Div(id='validation-results')
+            ),
 
             # Conversion results
-            html.Div(id='conversion-results'),
+            dcc.Loading(
+                id="loading-conversion",
+                type="default",
+                children=html.Div(id='conversion-results')
+            ),
         ], md=8),
     ]),
 
     # Footer
     dbc.Row([
         dbc.Col([
-            html.Hr(),
+            html.Div(
+                style={'borderTop': '1px solid #e0e0e0', 'marginTop': '4rem', 'paddingTop': '2rem', 'paddingBottom': '2rem'}
+            ),
             html.P([
-                "Built with Dash & FFmpeg | ",
-                html.A("GitHub", href="https://github.com", className="text-decoration-none")
-            ], className="text-center text-muted small")
+                html.Span("Built with Dash & FFmpeg", style={'color': '#999', 'fontSize': '0.85rem'}),
+                html.Span(" • ", style={'color': '#ddd', 'margin': '0 0.5rem'}),
+                html.A("GitHub",
+                       href="https://github.com/kahio-henrique/video-analysis-wpp-official-api",
+                       target="_blank",
+                       style={'color': '#666', 'fontSize': '0.85rem', 'textDecoration': 'none', 'borderBottom': '1px solid #ddd'})
+            ], className="text-center")
         ])
-    ], className="mt-5"),
+    ]),
 
-], fluid=True, className="py-4")
+], fluid=True, style={'maxWidth': '1200px', 'padding': '2rem'})
 
 
 @app.callback(
@@ -175,18 +236,42 @@ def handle_upload(contents, filename):
 
         file_size_mb = len(decoded) / (1024 * 1024)
 
-        status = dbc.Alert([
-            html.I(className="fas fa-check-circle me-2"),
-            f"Uploaded: {filename} ({file_size_mb:.2f} MB)"
-        ], color='success')
+        status = html.Div([
+            html.Div("✓ Upload Complete", style={
+                'backgroundColor': '#f1f8f4',
+                'color': '#4CAF50',
+                'padding': '0.75rem 1rem',
+                'borderRadius': '6px',
+                'fontSize': '0.85rem',
+                'fontWeight': '400',
+                'marginBottom': '0.5rem'
+            }),
+            html.Div(f"{filename} • {file_size_mb:.2f} MB", style={
+                'color': '#666',
+                'fontSize': '0.8rem',
+                'padding': '0.25rem 0'
+            })
+        ])
 
         return status, str(filepath), False, False, False
 
     except Exception as e:
-        status = dbc.Alert([
-            html.I(className="fas fa-exclamation-triangle me-2"),
-            f"Upload failed: {str(e)}"
-        ], color='danger')
+        status = html.Div([
+            html.Div("✗ Upload Failed", style={
+                'backgroundColor': '#fef2f2',
+                'color': '#f44336',
+                'padding': '0.75rem 1rem',
+                'borderRadius': '6px',
+                'fontSize': '0.85rem',
+                'fontWeight': '400',
+                'marginBottom': '0.5rem'
+            }),
+            html.Div(str(e), style={
+                'color': '#666',
+                'fontSize': '0.8rem',
+                'padding': '0.25rem 0'
+            })
+        ])
 
         return status, '', True, True, True
 
@@ -211,10 +296,23 @@ def validate_video(n_clicks, filepath):
         return create_validation_card(results)
 
     except Exception as e:
-        return dbc.Alert([
-            html.I(className="fas fa-exclamation-triangle me-2"),
-            f"Validation error: {str(e)}"
-        ], color='danger')
+        return html.Div([
+            html.Div("✗ Validation Error", style={
+                'backgroundColor': '#fef2f2',
+                'color': '#f44336',
+                'padding': '1rem 1.5rem',
+                'borderRadius': '6px',
+                'fontSize': '0.95rem',
+                'fontWeight': '400',
+                'marginBottom': '0.5rem',
+                'borderLeft': '3px solid #f44336'
+            }),
+            html.Div(str(e), style={
+                'color': '#666',
+                'fontSize': '0.85rem',
+                'padding': '0.5rem 0'
+            })
+        ])
 
 
 @app.callback(
@@ -258,82 +356,140 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
             validation_results = validator.validate_all()
 
             card = dbc.Card([
-                dbc.CardHeader([
-                    html.I(className="fas fa-check-circle me-2"),
-                    f"{action} - Success"
-                ], className="bg-success text-white fw-bold"),
                 dbc.CardBody([
-                    html.P(result['message'], className='mb-3'),
+                    # Success badge
+                    html.Div([
+                        html.Div(f"✓ {action} Complete", style={
+                            'backgroundColor': '#f1f8f4',
+                            'color': '#4CAF50',
+                            'padding': '0.75rem 1.5rem',
+                            'borderRadius': '6px',
+                            'display': 'inline-block',
+                            'fontSize': '0.95rem',
+                            'fontWeight': '400',
+                            'letterSpacing': '0.3px',
+                            'marginBottom': '1.5rem'
+                        })
+                    ]),
 
-                    dbc.Alert([
-                        html.I(className="fas fa-download me-2"),
-                        f"Download: {os.path.basename(result['output_path'])}"
-                    ], color='info'),
+                    # File location
+                    html.Div([
+                        html.Div("Output File", style={'fontSize': '0.8rem', 'color': '#999', 'marginBottom': '0.5rem'}),
+                        html.Code(
+                            os.path.basename(result['output_path']),
+                            style={
+                                'display': 'block',
+                                'padding': '0.75rem',
+                                'backgroundColor': '#fafafa',
+                                'color': '#333',
+                                'fontSize': '0.85rem',
+                                'borderRadius': '6px',
+                                'border': '1px solid #e0e0e0',
+                                'fontFamily': 'monospace'
+                            }
+                        ),
+                        html.Small(
+                            f"Location: {str(UPLOAD_FOLDER.absolute())}",
+                            style={'color': '#999', 'fontSize': '0.75rem', 'display': 'block', 'marginTop': '0.5rem'}
+                        )
+                    ], style={'marginBottom': '1.5rem'}),
 
-                    html.Hr(),
-                    html.H5("Validation Results:", className='mb-3'),
+                    # File size
+                    html.Div(
+                        f"Size: {os.path.getsize(result['output_path']) / (1024 * 1024):.2f} MB",
+                        style={'color': '#666', 'fontSize': '0.85rem', 'marginBottom': '1.5rem'}
+                    ),
+
+                    html.Hr(style={'borderColor': '#e0e0e0', 'margin': '1.5rem 0'}),
+
+                    html.H6("Validation Results", style={'fontSize': '0.9rem', 'fontWeight': '400', 'color': '#666', 'marginBottom': '1rem'}),
                     create_validation_table(validation_results)
                 ])
-            ], className='shadow-sm mb-3')
+            ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'}, className='mb-3')
 
             return card
         else:
-            return dbc.Alert([
-                html.I(className="fas fa-exclamation-triangle me-2"),
-                html.Strong(f"{action} Failed: "),
-                html.Br(),
-                result['message']
-            ], color='danger')
+            return html.Div([
+                html.Div(f"✗ {action} Failed", style={
+                    'backgroundColor': '#fef2f2',
+                    'color': '#f44336',
+                    'padding': '1rem 1.5rem',
+                    'borderRadius': '6px',
+                    'fontSize': '0.95rem',
+                    'fontWeight': '400',
+                    'marginBottom': '0.5rem',
+                    'borderLeft': '3px solid #f44336'
+                }),
+                html.Div(result['message'], style={
+                    'color': '#666',
+                    'fontSize': '0.85rem',
+                    'padding': '0.5rem 0'
+                })
+            ])
 
     except Exception as e:
-        return dbc.Alert([
-            html.I(className="fas fa-exclamation-triangle me-2"),
-            f"Conversion error: {str(e)}"
-        ], color='danger')
+        return html.Div([
+            html.Div("✗ Conversion Error", style={
+                'backgroundColor': '#fef2f2',
+                'color': '#f44336',
+                'padding': '1rem 1.5rem',
+                'borderRadius': '6px',
+                'fontSize': '0.95rem',
+                'fontWeight': '400',
+                'marginBottom': '0.5rem',
+                'borderLeft': '3px solid #f44336'
+            }),
+            html.Div(str(e), style={
+                'color': '#666',
+                'fontSize': '0.85rem',
+                'padding': '0.5rem 0'
+            })
+        ])
 
 
 def create_validation_card(results):
     """Create a card displaying validation results"""
     # Determine overall status
     if results['is_valid']:
-        status_color = 'success'
-        status_icon = 'fa-check-circle'
-        status_text = 'Video is WhatsApp API Compliant'
+        status_color = '#4CAF50'
+        status_bg = '#f1f8f4'
+        status_text = '✓ Valid'
     else:
-        status_color = 'danger'
-        status_icon = 'fa-times-circle'
-        status_text = 'Video Does Not Meet Requirements'
+        status_color = '#f44336'
+        status_bg = '#fef2f2'
+        status_text = '✗ Invalid'
 
     card = dbc.Card([
-        dbc.CardHeader([
-            html.I(className=f"fas {status_icon} me-2"),
-            "Validation Results"
-        ], className=f"bg-{status_color} text-white fw-bold"),
         dbc.CardBody([
             # Overall status
-            dbc.Alert([
-                html.I(className=f"fas {status_icon} me-2"),
-                html.Strong(status_text)
-            ], color=status_color, className='mb-4'),
+            html.Div([
+                html.Div(status_text, style={
+                    'backgroundColor': status_bg,
+                    'color': status_color,
+                    'padding': '0.75rem 1.5rem',
+                    'borderRadius': '6px',
+                    'display': 'inline-block',
+                    'fontSize': '0.95rem',
+                    'fontWeight': '400',
+                    'letterSpacing': '0.3px',
+                    'marginBottom': '1.5rem'
+                })
+            ]),
 
             # File info
-            dbc.Row([
-                dbc.Col([
-                    html.Strong("File: "),
-                    html.Span(os.path.basename(results['file_path']))
-                ], md=6),
-                dbc.Col([
-                    html.Strong("Size: "),
-                    html.Span(f"{results['file_size_mb']} MB")
-                ], md=6),
-            ], className='mb-3'),
+            html.Div([
+                html.Span(os.path.basename(results['file_path']),
+                         style={'color': '#333', 'fontSize': '0.9rem', 'marginRight': '1rem'}),
+                html.Span(f"{results['file_size_mb']} MB",
+                         style={'color': '#999', 'fontSize': '0.85rem'})
+            ], style={'marginBottom': '1.5rem'}),
 
-            html.Hr(),
+            html.Hr(style={'borderColor': '#e0e0e0', 'margin': '1.5rem 0'}),
 
             # Validation table
             create_validation_table(results)
         ])
-    ], className='shadow-sm mb-3')
+    ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'}, className='mb-3')
 
     return card
 
@@ -344,39 +500,76 @@ def create_validation_table(results):
 
     for name, validation in results['validations'].items():
         if validation['valid']:
-            icon = html.I(className="fas fa-check-circle text-success")
-            row_class = "table-success"
+            icon = "✓"
+            icon_color = '#4CAF50'
+            bg_color = '#fafafa'
         else:
-            icon = html.I(className="fas fa-times-circle text-danger")
-            row_class = "table-danger"
+            icon = "✗"
+            icon_color = '#f44336'
+            bg_color = '#fff'
 
         rows.append(
-            html.Tr([
-                html.Td(icon, style={'width': '40px'}),
-                html.Td(html.Strong(name)),
-                html.Td(validation['message']),
-            ], className=row_class)
+            html.Div([
+                html.Div([
+                    html.Span(icon, style={'color': icon_color, 'fontSize': '1rem', 'marginRight': '0.75rem'}),
+                    html.Span(name, style={'color': '#333', 'fontSize': '0.9rem', 'fontWeight': '400'}),
+                ], style={'marginBottom': '0.25rem'}),
+                html.Div(
+                    validation['message'],
+                    style={'color': '#666', 'fontSize': '0.85rem', 'marginLeft': '1.5rem'}
+                )
+            ], style={
+                'padding': '0.75rem',
+                'backgroundColor': bg_color,
+                'borderRadius': '6px',
+                'marginBottom': '0.5rem'
+            })
         )
 
-    table = dbc.Table([
-        html.Tbody(rows)
-    ], bordered=True, hover=True, responsive=True, className='mb-3')
+    # Only show if there are validations
+    content = []
+    if rows:
+        content.append(html.Div(rows))
+
+    # Add errors if any
+    if results.get('errors'):
+        content.append(html.Hr(style={'borderColor': '#e0e0e0', 'margin': '1.5rem 0'}))
+        content.append(html.H6("Issues Found",
+                               style={'fontSize': '0.9rem', 'fontWeight': '400', 'color': '#f44336', 'marginBottom': '1rem'}))
+        for error in results['errors']:
+            content.append(html.Div(
+                error,
+                style={
+                    'padding': '0.75rem',
+                    'backgroundColor': '#fef2f2',
+                    'color': '#666',
+                    'fontSize': '0.85rem',
+                    'borderRadius': '6px',
+                    'marginBottom': '0.5rem',
+                    'borderLeft': '3px solid #f44336'
+                }
+            ))
 
     # Add warnings if any
-    warnings_section = []
     if results.get('warnings'):
-        warnings_section = [
-            html.Hr(),
-            html.H6([
-                html.I(className="fas fa-exclamation-triangle text-warning me-2"),
-                "Warnings:"
-            ]),
-            html.Ul([
-                html.Li(warning, className='text-warning') for warning in results['warnings']
-            ])
-        ]
+        content.append(html.Hr(style={'borderColor': '#e0e0e0', 'margin': '1.5rem 0'}))
+        content.append(html.H6("Warnings",
+                               style={'fontSize': '0.9rem', 'fontWeight': '400', 'color': '#ff9800', 'marginBottom': '1rem'}))
+        for warning in results['warnings']:
+            content.append(html.Div(
+                warning,
+                style={
+                    'padding': '0.75rem',
+                    'backgroundColor': '#fff8e1',
+                    'color': '#666',
+                    'fontSize': '0.85rem',
+                    'borderRadius': '6px',
+                    'marginBottom': '0.5rem',
+                    'borderLeft': '3px solid #ff9800'
+                }
+            ))
 
-    return html.Div([table] + warnings_section)
+    return html.Div(content)
 
 
 if __name__ == '__main__':
@@ -388,4 +581,4 @@ if __name__ == '__main__':
     print("\nPress Ctrl+C to stop the server")
     print("="*60 + "\n")
 
-    app.run_server(debug=True, host='127.0.0.1', port=8050)
+    app.run(debug=True, host='127.0.0.1', port=8050)

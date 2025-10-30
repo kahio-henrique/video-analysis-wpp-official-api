@@ -4,8 +4,28 @@ Converts and fixes video files to meet WhatsApp API specifications
 """
 import os
 import subprocess
+import shutil
 from pathlib import Path
 from typing import Dict, Optional, Callable
+
+
+def check_ffmpeg_installed() -> tuple[bool, str]:
+    """
+    Check if FFmpeg is installed and accessible
+
+    Returns:
+        Tuple of (is_installed: bool, message: str)
+    """
+    ffmpeg_path = shutil.which('ffmpeg')
+    ffprobe_path = shutil.which('ffprobe')
+
+    if not ffmpeg_path:
+        return False, "FFmpeg is not installed or not in system PATH. Please install FFmpeg from https://ffmpeg.org/download.html"
+
+    if not ffprobe_path:
+        return False, "FFprobe is not installed or not in system PATH. Please install FFmpeg (includes ffprobe) from https://ffmpeg.org/download.html"
+
+    return True, f"FFmpeg found at: {ffmpeg_path}"
 
 
 class VideoConverter:
@@ -44,6 +64,13 @@ class VideoConverter:
             'message': '',
             'error': None
         }
+
+        # Check if FFmpeg is installed
+        is_installed, message = check_ffmpeg_installed()
+        if not is_installed:
+            result['message'] = message
+            result['error'] = 'FFmpeg not found'
+            return result
 
         try:
             # Build ffmpeg command for WhatsApp compliance
@@ -157,6 +184,13 @@ class VideoConverter:
             'error': None
         }
 
+        # Check if FFmpeg is installed
+        is_installed, message = check_ffmpeg_installed()
+        if not is_installed:
+            result['message'] = message
+            result['error'] = 'FFmpeg not found'
+            return result
+
         try:
             if progress_callback:
                 progress_callback("Moving moov atom to beginning...")
@@ -211,6 +245,13 @@ class VideoConverter:
             'message': '',
             'error': None
         }
+
+        # Check if FFmpeg is installed
+        is_installed, message = check_ffmpeg_installed()
+        if not is_installed:
+            result['message'] = message
+            result['error'] = 'FFmpeg not found'
+            return result
 
         try:
             if progress_callback:
