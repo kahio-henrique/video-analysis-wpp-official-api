@@ -49,6 +49,12 @@ TRANSLATIONS = {
         'footer_github': 'GitHub',
         'language': 'Language',
         'download_video': 'Download Video',
+        'temp_file_note': '📌 Temporary file - Click download to save to your preferred location',
+        'how_it_works': 'How it works:',
+        'step_1': '1. Upload video (temporary storage)',
+        'step_2': '2. Process & validate',
+        'step_3': '3. Download to your location',
+        'cli_note': 'For direct file paths:',
     },
     'pt': {
         'title': 'Validador de Vídeo',
@@ -95,6 +101,12 @@ TRANSLATIONS = {
         'footer_github': 'GitHub',
         'language': 'Idioma',
         'download_video': 'Baixar Vídeo',
+        'temp_file_note': '📌 Arquivo temporário - Clique para baixar no local de sua preferência',
+        'how_it_works': 'Como funciona:',
+        'step_1': '1. Enviar vídeo (armazenamento temporário)',
+        'step_2': '2. Processar e validar',
+        'step_3': '3. Baixar no seu local',
+        'cli_note': 'Para caminhos diretos de arquivo:',
     },
     'es': {
         'title': 'Validador de Video',
@@ -141,6 +153,12 @@ TRANSLATIONS = {
         'footer_github': 'GitHub',
         'language': 'Idioma',
         'download_video': 'Descargar Video',
+        'temp_file_note': '📌 Archivo temporal - Haz clic para descargar en tu ubicación preferida',
+        'how_it_works': 'Cómo funciona:',
+        'step_1': '1. Subir video (almacenamiento temporal)',
+        'step_2': '2. Procesar y validar',
+        'step_3': '3. Descargar en tu ubicación',
+        'cli_note': 'Para rutas de archivo directas:',
     }
 }
 

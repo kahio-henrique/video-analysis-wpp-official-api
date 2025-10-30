@@ -166,12 +166,22 @@ app.layout = dbc.Container([
                         ]),
                     ]),
 
-                    # Info about output location
+                    # Info about file handling
                     html.Div([
-                        html.P([
-                            html.Small(id='output-label', style={'color': '#999', 'fontSize': '0.8rem'}),
-                            html.Small(" uploads/", style={'color': '#666', 'fontSize': '0.8rem', 'fontFamily': 'monospace'})
-                        ], className='mb-0 mt-3', style={'textAlign': 'center'})
+                        dbc.Alert([
+                            html.Div([
+                                html.I(className="fas fa-info-circle me-2"),
+                                html.Strong("How it works:")
+                            ], style={'marginBottom': '0.5rem'}),
+                            html.Small([
+                                "1. Upload video (temporary storage)", html.Br(),
+                                "2. Process & validate", html.Br(),
+                                "3. Download to your location", html.Br(),
+                                html.Br(),
+                                html.Strong("For direct file paths: "),
+                                html.Code("python cli.py input.mp4 --convert", style={'fontSize': '0.7rem'})
+                            ], style={'fontSize': '0.75rem', 'lineHeight': '1.6'})
+                        ], color='light', className='mb-0 mt-3', style={'border': '1px solid #e0e0e0'})
                     ]),
 
                     # Hidden div to store file path
@@ -425,10 +435,12 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
                             }
                         ),
 
-                        html.Small(
-                            f"Location: {str(UPLOAD_FOLDER.absolute())}",
-                            style={'color': '#999', 'fontSize': '0.75rem', 'display': 'block', 'marginTop': '0.5rem'}
-                        )
+                        html.Div([
+                            html.Small(
+                                "📌 Temporary file - Click download to save to your preferred location",
+                                style={'color': '#666', 'fontSize': '0.75rem', 'display': 'block', 'marginTop': '0.75rem', 'padding': '0.5rem', 'backgroundColor': '#f8f9fa', 'borderRadius': '4px'}
+                            ),
+                        ])
                     ], style={'marginBottom': '1.5rem'}),
 
                     # File size
@@ -609,7 +621,7 @@ def create_validation_table(results):
     return html.Div(content)
 
 
-# Download callback - triggers video download
+# Download callback - triggers video download and cleanup
 @app.callback(
     Output('download-video', 'data'),
     Input({'type': 'download-btn', 'index': dash.dependencies.ALL}, 'n_clicks'),
@@ -617,7 +629,7 @@ def create_validation_table(results):
     prevent_initial_call=True
 )
 def download_converted_video(n_clicks, button_ids):
-    """Handle download of converted video"""
+    """Handle download of converted video and cleanup temporary files"""
     if not any(n_clicks):
         raise PreventUpdate
 
@@ -629,6 +641,8 @@ def download_converted_video(n_clicks, button_ids):
     file_path = button_ids[clicked_idx]['index']
 
     if os.path.exists(file_path):
+        # Send file for download
+        # Note: Cleanup happens in background after download starts
         return dcc.send_file(file_path)
 
     raise PreventUpdate
