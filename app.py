@@ -33,6 +33,9 @@ app.layout = dbc.Container([
     # Language store
     dcc.Store(id='language-store', data='en'),
 
+    # Download component for converted videos
+    dcc.Download(id="download-video"),
+
     # Header with language selector
     dbc.Row([
         dbc.Col([
@@ -109,8 +112,8 @@ app.layout = dbc.Container([
                     # Action buttons
                     html.Div([
                         dbc.Button(
-                            "Validate",
                             id='validate-btn',
+                            children="Validate",
                             className='w-100 mb-2',
                             disabled=True,
                             style={
@@ -125,8 +128,8 @@ app.layout = dbc.Container([
                         ),
 
                         dbc.Button(
-                            "Convert & Fix",
                             id='convert-btn',
+                            children="Convert & Fix",
                             className='w-100 mb-2',
                             disabled=True,
                             style={
@@ -142,11 +145,11 @@ app.layout = dbc.Container([
 
                         html.Div([
                             dbc.Button(
-                                [
-                                    html.Div("Quick Fix", style={'marginBottom': '0.15rem'}),
-                                    html.Small("(moov atom only)", style={'fontSize': '0.75rem', 'opacity': '0.7'})
-                                ],
                                 id='quickfix-btn',
+                                children=[
+                                    html.Div(id='quickfix-text', style={'marginBottom': '0.15rem'}),
+                                    html.Small(id='quickfix-subtitle-text', style={'fontSize': '0.75rem', 'opacity': '0.7'})
+                                ],
                                 className='w-100 mb-2',
                                 disabled=True,
                                 style={
@@ -166,8 +169,8 @@ app.layout = dbc.Container([
                     # Info about output location
                     html.Div([
                         html.P([
-                            html.Small("Output: ", style={'color': '#999', 'fontSize': '0.8rem'}),
-                            html.Small("uploads/", style={'color': '#666', 'fontSize': '0.8rem', 'fontFamily': 'monospace'})
+                            html.Small(id='output-label', style={'color': '#999', 'fontSize': '0.8rem'}),
+                            html.Small(" uploads/", style={'color': '#666', 'fontSize': '0.8rem', 'fontFamily': 'monospace'})
                         ], className='mb-0 mt-3', style={'textAlign': 'center'})
                     ]),
 
@@ -179,49 +182,8 @@ app.layout = dbc.Container([
             # Requirements card
             dbc.Card([
                 dbc.CardBody([
-                    html.H6("WhatsApp API Requirements", style={'fontSize': '0.95rem', 'fontWeight': '400', 'color': '#333', 'marginBottom': '1rem'}),
-                    html.Div([
-                        # Video Codec
-                        html.Div([
-                            html.Div("Video Codec", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("H.264 (Baseline or Main profile)", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Codec Level
-                        html.Div([
-                            html.Div("Codec Level", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("3.0 (max 3.1)", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Audio Codec
-                        html.Div([
-                            html.Div("Audio Codec", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("AAC-LC", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Container
-                        html.Div([
-                            html.Div("Container", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("MP4 or 3GP", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # File Size
-                        html.Div([
-                            html.Div("Max Size", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("16 MB", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Audio Streams
-                        html.Div([
-                            html.Div("Audio Streams", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("Single or none", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Pixel Format
-                        html.Div([
-                            html.Div("Pixel Format", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("yuv420p", style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
-                        ]),
-                        # Progressive
-                        html.Div([
-                            html.Div("Progressive", style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
-                            html.Div("moov atom at beginning", style={'fontSize': '0.85rem', 'color': '#333'}),
-                        ]),
-                    ])
+                    html.H6(id='requirements-title', style={'fontSize': '0.95rem', 'fontWeight': '400', 'color': '#333', 'marginBottom': '1rem'}),
+                    html.Div(id='requirements-content')
                 ])
             ], style={'border': '1px solid #e0e0e0', 'borderRadius': '8px', 'boxShadow': 'none'})
         ], md=4),
@@ -251,9 +213,9 @@ app.layout = dbc.Container([
                 style={'borderTop': '1px solid #e0e0e0', 'marginTop': '4rem', 'paddingTop': '2rem', 'paddingBottom': '2rem'}
             ),
             html.P([
-                html.Span("Built with Dash & FFmpeg", style={'color': '#999', 'fontSize': '0.85rem'}),
+                html.Span(id='footer-text', style={'color': '#999', 'fontSize': '0.85rem'}),
                 html.Span(" • ", style={'color': '#ddd', 'margin': '0 0.5rem'}),
-                html.A("GitHub",
+                html.A(id='footer-github',
                        href="https://github.com/kahio-henrique/video-analysis-wpp-official-api",
                        target="_blank",
                        style={'color': '#666', 'fontSize': '0.85rem', 'textDecoration': 'none', 'borderBottom': '1px solid #ddd'})
@@ -427,7 +389,7 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
                         })
                     ]),
 
-                    # File location
+                    # File info and download button
                     html.Div([
                         html.Div("Output File", style={'fontSize': '0.8rem', 'color': '#999', 'marginBottom': '0.5rem'}),
                         html.Code(
@@ -440,9 +402,29 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
                                 'fontSize': '0.85rem',
                                 'borderRadius': '6px',
                                 'border': '1px solid #e0e0e0',
-                                'fontFamily': 'monospace'
+                                'fontFamily': 'monospace',
+                                'marginBottom': '0.75rem'
                             }
                         ),
+
+                        # Download button
+                        dbc.Button(
+                            [
+                                html.I(className="fas fa-download me-2"),
+                                "Download Video"
+                            ],
+                            id={'type': 'download-btn', 'index': result['output_path']},
+                            color="primary",
+                            size="sm",
+                            className="mb-2",
+                            style={
+                                'backgroundColor': '#1a1a1a',
+                                'border': 'none',
+                                'borderRadius': '6px',
+                                'fontSize': '0.85rem'
+                            }
+                        ),
+
                         html.Small(
                             f"Location: {str(UPLOAD_FOLDER.absolute())}",
                             style={'color': '#999', 'fontSize': '0.75rem', 'display': 'block', 'marginTop': '0.5rem'}
@@ -627,21 +609,109 @@ def create_validation_table(results):
     return html.Div(content)
 
 
+# Download callback - triggers video download
+@app.callback(
+    Output('download-video', 'data'),
+    Input({'type': 'download-btn', 'index': dash.dependencies.ALL}, 'n_clicks'),
+    State({'type': 'download-btn', 'index': dash.dependencies.ALL}, 'id'),
+    prevent_initial_call=True
+)
+def download_converted_video(n_clicks, button_ids):
+    """Handle download of converted video"""
+    if not any(n_clicks):
+        raise PreventUpdate
+
+    # Find which button was clicked
+    clicked_idx = next((i for i, clicks in enumerate(n_clicks) if clicks), None)
+    if clicked_idx is None:
+        raise PreventUpdate
+
+    file_path = button_ids[clicked_idx]['index']
+
+    if os.path.exists(file_path):
+        return dcc.send_file(file_path)
+
+    raise PreventUpdate
+
+
 # Translation callback - updates UI text when language changes
 @app.callback(
     [Output('page-title', 'children'),
      Output('page-subtitle', 'children'),
      Output('upload-title', 'children'),
-     Output('upload-subtitle', 'children')],
+     Output('upload-subtitle', 'children'),
+     Output('validate-btn', 'children'),
+     Output('convert-btn', 'children'),
+     Output('quickfix-text', 'children'),
+     Output('quickfix-subtitle-text', 'children'),
+     Output('output-label', 'children'),
+     Output('requirements-title', 'children'),
+     Output('requirements-content', 'children'),
+     Output('footer-text', 'children'),
+     Output('footer-github', 'children')],
     Input('language-selector', 'value')
 )
 def update_translations(lang):
     """Update UI text based on selected language"""
+
+    # Build requirements content dynamically
+    requirements = html.Div([
+        # Video Codec
+        html.Div([
+            html.Div(get_text(lang, 'req_video_codec'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_video_codec_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Codec Level
+        html.Div([
+            html.Div(get_text(lang, 'req_codec_level'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_codec_level_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Audio Codec
+        html.Div([
+            html.Div(get_text(lang, 'req_audio_codec'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_audio_codec_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Container
+        html.Div([
+            html.Div(get_text(lang, 'req_container'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_container_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # File Size
+        html.Div([
+            html.Div(get_text(lang, 'req_max_size'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_max_size_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Audio Streams
+        html.Div([
+            html.Div(get_text(lang, 'req_audio_streams'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_audio_streams_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Pixel Format
+        html.Div([
+            html.Div(get_text(lang, 'req_pixel_format'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_pixel_format_val'), style={'fontSize': '0.85rem', 'color': '#333', 'marginBottom': '0.75rem'}),
+        ]),
+        # Progressive
+        html.Div([
+            html.Div(get_text(lang, 'req_progressive'), style={'fontSize': '0.75rem', 'color': '#999', 'textTransform': 'uppercase', 'letterSpacing': '0.5px', 'marginBottom': '0.25rem'}),
+            html.Div(get_text(lang, 'req_progressive_val'), style={'fontSize': '0.85rem', 'color': '#333'}),
+        ]),
+    ])
+
     return (
         get_text(lang, 'title'),
         get_text(lang, 'subtitle'),
         get_text(lang, 'upload_title'),
-        get_text(lang, 'upload_subtitle')
+        get_text(lang, 'upload_subtitle'),
+        get_text(lang, 'validate_btn'),
+        get_text(lang, 'convert_btn'),
+        get_text(lang, 'quickfix_btn'),
+        get_text(lang, 'quickfix_subtitle'),
+        get_text(lang, 'output_location'),
+        get_text(lang, 'requirements_title'),
+        requirements,
+        get_text(lang, 'footer_text'),
+        get_text(lang, 'footer_github')
     )
 
 

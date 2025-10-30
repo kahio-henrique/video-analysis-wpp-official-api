@@ -48,6 +48,7 @@ TRANSLATIONS = {
         'footer_text': 'Built with Dash & FFmpeg',
         'footer_github': 'GitHub',
         'language': 'Language',
+        'download_video': 'Download Video',
     },
     'pt': {
         'title': 'Validador de Vídeo',
@@ -93,6 +94,7 @@ TRANSLATIONS = {
         'footer_text': 'Criado com Dash & FFmpeg',
         'footer_github': 'GitHub',
         'language': 'Idioma',
+        'download_video': 'Baixar Vídeo',
     },
     'es': {
         'title': 'Validador de Video',
@@ -138,6 +140,7 @@ TRANSLATIONS = {
         'footer_text': 'Creado con Dash & FFmpeg',
         'footer_github': 'GitHub',
         'language': 'Idioma',
+        'download_video': 'Descargar Video',
     }
 }
 
