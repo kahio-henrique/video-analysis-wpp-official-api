@@ -8,20 +8,29 @@ import io
 from pathlib import Path
 
 import dash
-from dash import dcc, html, Input, Output, State, callback_context
+from dash import dcc, html, Input, Output, State, callback_context, DiskcacheManager
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
+import diskcache
 
 from video_validator import VideoValidator, format_validation_report
 from video_converter import VideoConverter
 from translations import TRANSLATIONS, get_text
+from logger_config import setup_logger
 
+# Initialize logger
+logger = setup_logger("app")
+
+# Initialize Background Callback Manager
+cache = diskcache.Cache("./cache")
+background_callback_manager = DiskcacheManager(cache)
 
 # Initialize Dash app
 app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME],
-    title="Video Validator - WhatsApp API"
+    title="Video Validator - WhatsApp API",
+    background_callback_manager=background_callback_manager
 )
 
 # Create uploads directory if it doesn't exist
@@ -166,6 +175,21 @@ app.layout = dbc.Container([
                         ]),
                     ]),
 
+                    # Target size input
+                    html.Div([
+                        html.Label("Target Max Size (MB)", className="small text-muted mb-1"),
+                        dbc.Input(
+                            id='max-size-input',
+                            type='number',
+                            value=16,
+                            min=1,
+                            step=1,
+                            className='mb-1',
+                            style={'fontSize': '0.9rem'}
+                        ),
+                        html.Small("Recommended: 16 MB for WhatsApp", className="text-muted", style={'fontSize': '0.75rem'})
+                    ], className="mt-3 mb-2"),
+
                     # Info about file handling
                     html.Div(id='file-handling-info', className='mt-3'),
 
@@ -185,6 +209,12 @@ app.layout = dbc.Container([
 
         # Right column - Results
         dbc.Col([
+            # Progress Bar Area
+            html.Div([
+                dbc.Progress(id="progress-bar", value=0, striped=True, animated=True, className="mb-2", style={"height": "20px", "display": "none"}),
+                html.Div(id="progress-label", className="text-center text-muted small mb-3")
+            ], id="progress-container"),
+
             # Validation results
             dcc.Loading(
                 id="loading-validation",
@@ -193,11 +223,7 @@ app.layout = dbc.Container([
             ),
 
             # Conversion results
-            dcc.Loading(
-                id="loading-conversion",
-                type="default",
-                children=html.Div(id='conversion-results')
-            ),
+            html.Div(id='conversion-results')
         ], md=8),
     ]),
 
@@ -221,6 +247,33 @@ app.layout = dbc.Container([
 ], fluid=True, style={'maxWidth': '1200px', 'padding': '2rem'})
 
 
+import uuid
+import time
+
+# ... (existing imports)
+
+# ... (app initialization)
+
+# Helper function to clean up old files
+def cleanup_old_files(max_age_seconds=3600):
+    """Delete files in upload folder older than max_age_seconds"""
+    try:
+        now = time.time()
+        count = 0
+        for f in UPLOAD_FOLDER.iterdir():
+            if f.is_file():
+                if f.stat().st_mtime < now - max_age_seconds:
+                    try:
+                        f.unlink()
+                        count += 1
+                    except Exception as e:
+                        logger.error(f"Failed to delete old file {f}: {e}")
+        if count > 0:
+            logger.info(f"Cleaned up {count} old files")
+    except Exception as e:
+        logger.error(f"Error during file cleanup: {e}")
+
+
 @app.callback(
     [Output('upload-status', 'children'),
      Output('stored-filepath', 'children'),
@@ -237,16 +290,31 @@ def handle_upload(contents, filename):
         raise PreventUpdate
 
     try:
-        # Decode and save file
+        logger.info(f"Upload started for file: {filename}")
+        
+        # Run cleanup of old files
+        cleanup_old_files()
+        
+        # Decode file
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
 
+        # Generate secure unique filename
+        file_ext = os.path.splitext(filename)[1]
+        if not file_ext:
+            file_ext = ".mp4" # Default to mp4 if no extension
+            
+        file_id = str(uuid.uuid4())
+        safe_filename = f"{file_id}{file_ext}"
+        filepath = UPLOAD_FOLDER / safe_filename
+
         # Save to uploads folder
-        filepath = UPLOAD_FOLDER / filename
         with open(filepath, 'wb') as f:
             f.write(decoded)
 
         file_size_mb = len(decoded) / (1024 * 1024)
+        
+        logger.info(f"File saved securely to: {filepath} (Original: {filename}, Size: {file_size_mb:.2f} MB)")
 
         status = html.Div([
             html.Div("✓ Upload Complete", style={
@@ -268,6 +336,7 @@ def handle_upload(contents, filename):
         return status, str(filepath), False, False, False
 
     except Exception as e:
+        logger.exception("Upload failed with critical error")
         status = html.Div([
             html.Div("✗ Upload Failed", style={
                 'backgroundColor': '#fef2f2',
@@ -278,7 +347,7 @@ def handle_upload(contents, filename):
                 'fontWeight': '400',
                 'marginBottom': '0.5rem'
             }),
-            html.Div(str(e), style={
+            html.Div(f"Error: {str(e)}", style={
                 'color': '#666',
                 'fontSize': '0.8rem',
                 'padding': '0.25rem 0'
@@ -300,14 +369,18 @@ def validate_video(n_clicks, filepath):
         raise PreventUpdate
 
     try:
+        logger.info(f"Starting validation for: {filepath}")
         # Run validation
         validator = VideoValidator(filepath)
         results = validator.validate_all()
+        
+        logger.info(f"Validation result: {results['is_valid']}")
 
         # Create results card
         return create_validation_card(results)
 
     except Exception as e:
+        logger.exception("Validation error")
         return html.Div([
             html.Div("✗ Validation Error", style={
                 'backgroundColor': '#fef2f2',
@@ -331,10 +404,13 @@ def validate_video(n_clicks, filepath):
     Output('conversion-results', 'children'),
     [Input('convert-btn', 'n_clicks'),
      Input('quickfix-btn', 'n_clicks')],
-    State('stored-filepath', 'children'),
+    [State('stored-filepath', 'children'),
+     State('max-size-input', 'value')],
+    progress=[Output('progress-bar', 'value'), Output('progress-label', 'children'), Output('progress-bar', 'style')],
+    background=True,
     prevent_initial_call=True
 )
-def convert_video(convert_clicks, quickfix_clicks, filepath):
+def convert_video(set_progress, convert_clicks, quickfix_clicks, filepath, max_size_mb):
     """Convert or fix video"""
     if not filepath:
         raise PreventUpdate
@@ -345,8 +421,36 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
         raise PreventUpdate
 
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    
+    # Default to 16 if None or invalid
+    try:
+        max_size_mb = float(max_size_mb)
+        if max_size_mb <= 0:
+            max_size_mb = 16.0
+    except (ValueError, TypeError):
+        max_size_mb = 16.0
+    
+    logger.info(f"Action triggered: {button_id} on file {filepath}. Max Size: {max_size_mb}MB")
+
+    def progress_handler(msg):
+        """Handle progress updates from converter"""
+        # Try to parse percentage
+        percentage = 0
+        try:
+            if "%" in msg:
+                percentage = int(msg.replace("%", ""))
+            else:
+                # Indeterminate state or parsing error
+                percentage = 50 
+        except:
+            percentage = 0
+            
+        set_progress((str(percentage), msg, {"height": "20px", "display": "flex"}))
 
     try:
+        # Initial progress
+        set_progress(("0", "Starting...", {"height": "20px", "display": "flex"}))
+
         # Generate output path
         input_file = Path(filepath)
         output_path = UPLOAD_FOLDER / f"{input_file.stem}_fixed.mp4"
@@ -355,11 +459,16 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
 
         # Perform conversion or quick fix
         if button_id == 'quickfix-btn':
-            result = converter.fix_moov_atom()
             action = "Quick Fix (moov atom)"
+            result = converter.fix_moov_atom(progress_callback=progress_handler)
         else:
-            result = converter.convert()
             action = "Full Conversion"
+            result = converter.convert(max_size_mb=max_size_mb, progress_callback=progress_handler)
+        
+        logger.info(f"Action '{action}' finished. Success: {result['success']}")
+        
+        # Reset progress bar
+        set_progress(("100", "Complete!", {"height": "20px", "display": "none"}))
 
         # Create result card
         if result['success']:
@@ -462,6 +571,7 @@ def convert_video(convert_clicks, quickfix_clicks, filepath):
             ])
 
     except Exception as e:
+        logger.exception("Conversion error")
         return html.Div([
             html.Div("✗ Conversion Error", style={
                 'backgroundColor': '#fef2f2',
@@ -624,13 +734,17 @@ def download_converted_video(n_clicks, button_ids):
         raise PreventUpdate
 
     file_path = button_ids[clicked_idx]['index']
+    
+    logger.info(f"Download requested for: {file_path}")
 
     if os.path.exists(file_path):
         # Send file for download
         # Note: Cleanup happens in background after download starts
         return dcc.send_file(file_path)
-
+    
+    logger.error(f"Download file not found: {file_path}")
     raise PreventUpdate
+
 
 
 # Translation callback - updates UI text when language changes
@@ -735,8 +849,8 @@ if __name__ == '__main__':
     print("Video Validator & Converter for WhatsApp API")
     print("="*60)
     print("\nStarting server...")
-    print("Open your browser and navigate to: http://127.0.0.1:8050")
+    print("Open your browser and navigate to: http://localhost:7777")
     print("\nPress Ctrl+C to stop the server")
     print("="*60 + "\n")
 
-    app.run(debug=True, host='127.0.0.1', port=8050)
+    app.run(debug=True, host='localhost', port=7777)

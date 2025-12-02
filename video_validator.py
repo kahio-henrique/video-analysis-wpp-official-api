@@ -9,6 +9,10 @@ import subprocess
 import shutil
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+from logger_config import setup_logger
+
+# Initialize logger
+logger = setup_logger("video_validator")
 
 
 class VideoValidator:
@@ -34,6 +38,7 @@ class VideoValidator:
         self.video_path = video_path
         self.file_size = os.path.getsize(video_path) if os.path.exists(video_path) else 0
         self.validation_results = {}
+        logger.debug(f"Initialized VideoValidator for: {video_path}")
 
     def validate_all(self) -> Dict:
         """
@@ -55,6 +60,7 @@ class VideoValidator:
 
         # Check if file exists
         if not os.path.exists(self.video_path):
+            logger.error(f"File not found: {self.video_path}")
             results['is_valid'] = False
             results['errors'].append('File does not exist')
             return results
@@ -69,6 +75,7 @@ class VideoValidator:
             return results
 
         if not video_info.get('streams'):
+            logger.warning(f"No streams found in file: {self.video_path}")
             results['is_valid'] = False
             results['errors'].append('Unable to read video file or invalid format')
             return results
@@ -97,6 +104,10 @@ class VideoValidator:
                 results['errors'].append(f"{validation_name}: {message}")
             elif details.get('warning'):
                 results['warnings'].append(f"{validation_name}: {details['warning']}")
+        
+        logger.info(f"Validation complete. Valid: {results['is_valid']}")
+        if not results['is_valid']:
+            logger.info(f"Validation errors: {results['errors']}")
 
         return results
 
@@ -109,8 +120,7 @@ class VideoValidator:
         """
         # Check if ffprobe is available
         if not shutil.which('ffprobe'):
-            print("FFprobe is not installed or not in system PATH")
-            print("Please install FFmpeg from https://ffmpeg.org/download.html")
+            logger.error("FFprobe not found in system PATH")
             return {'streams': [], 'format': {}, 'error': 'ffprobe not found'}
 
         try:
@@ -122,16 +132,19 @@ class VideoValidator:
                 '-show_streams',
                 self.video_path
             ]
+            
+            # logger.debug(f"Running ffprobe: {' '.join(cmd)}")
 
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
                 return json.loads(result.stdout)
             else:
+                logger.error(f"FFprobe failed with return code {result.returncode}")
                 return {'streams': [], 'format': {}}
 
         except Exception as e:
-            print(f"Error getting video info: {e}")
+            logger.exception("Error getting video info")
             return {'streams': [], 'format': {}}
 
     def _validate_file_size(self, video_info: Dict) -> Tuple[str, bool, str, Dict]:
@@ -319,6 +332,7 @@ class VideoValidator:
             )
 
         except Exception as e:
+            logger.exception("Error in _validate_moov_atom")
             return (
                 'Progressive Download (moov atom)',
                 False,
@@ -371,7 +385,7 @@ class VideoValidator:
                 return None
 
         except Exception as e:
-            print(f"Error finding moov atom: {e}")
+            logger.exception("Error finding moov atom")
             return None
 
 
